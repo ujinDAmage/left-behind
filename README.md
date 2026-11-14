@@ -1,6 +1,6 @@
 # Left Behind
 
-An interactive student exhibition for the Sarawak Space Challenge 2026. The static site contains ten exhibits, an equipment lab with ten activities, and a photo booth.
+An interactive student exhibition for the Sarawak Space Challenge 2026. The static site contains ten exhibits, an equipment lab with five activities, and a photo booth.
 
 ## Preview and publish
 

@@ -79,21 +79,10 @@ for (const reader of document.querySelectorAll("[data-reader]")) {
   const prev = reader.querySelector("[data-prev]");
   const next = reader.querySelector("[data-next]");
   const counter = reader.querySelector("[data-counter]");
-  const craft = reader.querySelector("[data-craft]");
-  const slider = reader.querySelector("[data-craft-control]");
-  const fold = reader.querySelector("[data-fold]");
-  const play = reader.querySelector("[data-play]");
-  let playback;
-  function pose(fraction, angle = fraction * 360) {
-    if (!craft) return;
-    craft.style.setProperty("--progress", fraction);
-    craft.style.setProperty("--turn", -angle + "deg");
-    craft.style.setProperty("--hop", Math.sin(fraction * Math.PI));
-  }
   let position = 0;
   const read = new Set([0]);
 
-  function show(index, animate = true, syncControl = true) {
+  function show(index, animate = true) {
     if (index < 0 || index >= scenes.length) return;
     position = index;
     read.add(index);
@@ -105,53 +94,52 @@ for (const reader of document.querySelectorAll("[data-reader]")) {
     if (prev) prev.disabled = index === 0;
     if (next) next.disabled = index === scenes.length - 1;
     if (counter) counter.textContent = "Page " + (index + 1) + " of " + scenes.length;
-    if (craft) {
-      craft.dataset.step = String(index);
-      craft.style.setProperty("--frame", index);
-      if (!slider || syncControl) {
-        const angle = slider?.max === "360" ? index * 90 : undefined;
-        if (slider) slider.value = String(angle ?? Math.round(index / (scenes.length - 1) * 100));
-        pose(index / (scenes.length - 1), angle);
-      }
-    }
     if (animate && !reducedMotion.matches && scenes[index].animate) {
-      const frames = reader.classList.contains("flip")
-        ? [{ transform: "rotateY(-32deg)", opacity: .35 }, { transform: "rotateY(0)", opacity: 1 }]
-        : [{ opacity: .35, transform: "translateY(5px)" }, { opacity: 1, transform: "translateY(0)" }];
+      const frames = [{ transform: "rotateY(-25deg)", opacity: .35 }, { transform: "rotateY(0)", opacity: 1 }];
       scenes[index].animate(frames, { duration: 340, easing: "ease-out" });
     }
   }
 
   prev?.addEventListener("click", () => show(position - 1));
   next?.addEventListener("click", () => show(position + 1));
-  slider?.addEventListener("input", () => {
-    const value = Number(slider.value);
-    const ratio = value / Number(slider.max);
-    const rotation = slider.max === "360";
-    pose(ratio, rotation ? value : undefined);
-    const index = rotation ? Math.round(value / 90) % 4 : Math.round(ratio * (scenes.length - 1));
-    const nextIndex = Math.min(index, scenes.length - 1);
-    if (nextIndex !== position) show(nextIndex, false, false);
-  });
-  fold?.addEventListener("click", () => {
-    const open = craft.classList.toggle("is-open");
-    fold.setAttribute("aria-expanded", String(open));
-  });
-  play?.addEventListener("click", () => {
-    if (playback) return;
-    show(0);
-    play.disabled = true;
-    playback = setInterval(() => {
-      show(position + 1);
-      if (position === scenes.length - 1) {
-        clearInterval(playback);
-        playback = undefined;
-        play.disabled = false;
-      }
-    }, 900);
-  });
   for (const choice of choices) choice.addEventListener("click", () => show(Number(choice.dataset.sceneIndex)));
   show(0, false);
+}
+
+for (const block of document.querySelectorAll("[data-stage-block]")) {
+  const stage = block.querySelector("[data-craft]");
+  const buttons = [...block.querySelectorAll("[data-stage-action]")];
+  const feedback = block.querySelector(".stage-feedback");
+  const angleControl = block.querySelector("[data-stage-angle]");
+  let replay;
+  function pose(angle, step) {
+    const progress = step / 2;
+    stage.style.setProperty("--progress", progress);
+    stage.style.setProperty("--turn", -angle + "deg");
+    stage.style.setProperty("--hop", step === 1 ? .85 : 0);
+    stage.style.setProperty("--frame", step);
+    stage.dataset.step = String(step);
+  }
+  for (const button of buttons) {
+    button.addEventListener("click", () => {
+      const step = Number(button.dataset.stageAction);
+      const angle = step * 90;
+      if (angleControl) angleControl.value = angle;
+      pose(angle, step);
+      stage.classList.add("is-open");
+      stage.classList.remove("is-playing");
+      cancelAnimationFrame(replay);
+      replay = requestAnimationFrame(() => { replay = requestAnimationFrame(() => stage.classList.add("is-playing")); });
+      for (const choice of buttons) choice.setAttribute("aria-pressed", String(choice === button));
+      feedback.textContent = button.dataset.description;
+    });
+  }
+  angleControl?.addEventListener("input", () => {
+    const angle = Number(angleControl.value);
+    pose(angle, Math.min(2, Math.round(angle / 90) % 4));
+    for (const choice of buttons) choice.setAttribute("aria-pressed", "false");
+    feedback.textContent = "Carousel angle: " + angle + "°.";
+  });
 }
 
 for (const lab of document.querySelectorAll("[data-laser]")) {
@@ -218,13 +206,73 @@ for (const lab of document.querySelectorAll("[data-laser]")) {
   });
 }
 
-for (const activity of document.querySelectorAll("[data-work]")) {
-  for (const button of activity.querySelectorAll("[data-answer]")) {
-    button.addEventListener("click", () => {
-      const answer = button.dataset.answer === activity.dataset.correct;
-      activity.querySelector(".activity-result").textContent = answer ? activity.dataset.yes : activity.dataset.no;
-    });
+const launch = document.getElementById("separate");
+if (launch) {
+  const diagram = document.querySelector(".separation");
+  const status = document.getElementById("separation-result");
+  launch.addEventListener("click", () => {
+    diagram.classList.add("launched");
+    launch.disabled = true;
+    status.textContent = "The cabin lifted off. The descent engine and landing legs stayed on the Moon.";
+  });
+  document.getElementById("rejoin").addEventListener("click", () => {
+    diagram.classList.remove("launched");
+    launch.disabled = false;
+    status.textContent = "Both stages are on the surface.";
+  });
+}
+
+const quakePlay = document.getElementById("play-quake");
+if (quakePlay) {
+  const quakeStop = document.getElementById("stop-quake");
+  const trace = document.querySelector(".quake-trace");
+  const status = document.getElementById("quake-result");
+  const duration = 3.1;
+  let sound, timer, context, sequence = 0;
+  function finish(text) {
+    clearTimeout(timer);
+    if (sound) {
+      try { sound.stop(); } catch {}
+      sound.disconnect();
+      sound = null;
+    }
+    trace.classList.remove("is-playing");
+    quakePlay.disabled = false;
+    quakeStop.disabled = true;
+    status.textContent = text;
   }
+  quakeStop.addEventListener("click", () => { sequence++; finish("Playback stopped."); });
+  quakePlay.addEventListener("click", async () => {
+    const id = ++sequence;
+    quakePlay.disabled = true;
+    quakeStop.disabled = false;
+    let audible = false;
+    try {
+      context ||= new AudioContext();
+      await context.resume();
+      if (id !== sequence) return;
+      const buffer = context.createBuffer(1, Math.ceil(duration * context.sampleRate), context.sampleRate);
+      const samples = buffer.getChannelData(0);
+      for (let i = 0; i < samples.length; i++) {
+        const t = i / context.sampleRate;
+        const event = Math.max(0, t - 1.18);
+        const swell = (1 - Math.exp(-event * 11)) * Math.exp(-event * 2.2);
+        samples[i] = (Math.sin(t * 260) + .43 * Math.sin(t * 520)) * swell * .18 + (Math.random() - .5) * .013;
+      }
+      sound = context.createBufferSource();
+      sound.buffer = buffer;
+      sound.connect(context.destination);
+      sound.start();
+      audible = true;
+    } catch {
+      // The visual trace remains available when audio playback is blocked.
+    }
+    if (id !== sequence) return;
+    trace.classList.add("is-playing");
+    status.textContent = audible ? "Playing a simulated marsquake. Listen for the stronger shaking." : "Showing the trace. Audio is unavailable.";
+    timer = setTimeout(() => finish("The strongest shaking arrives after the quiet baseline."), duration * 1000);
+  });
+  window.addEventListener("pagehide", () => { sequence++; finish(""); });
 }
 
 const golf = document.getElementById("golf-angle");
@@ -255,14 +303,6 @@ if (scan) {
   scan.addEventListener("click", () => { strips++; renderScan(); });
   document.getElementById("viking-reset").addEventListener("click", () => { strips = 0; renderScan(); });
 }
-const dust = document.getElementById("dust-slider");
-if (dust) dust.addEventListener("input", () => {
-  const light = 100 - Number(dust.value);
-  document.getElementById("dust-value").value = dust.value + "%";
-  document.getElementById("solar-meter").value = light;
-  document.getElementById("dust-result").textContent = light + "% of the clear-sky estimate.";
-});
-
 const booth = document.querySelector("[data-booth]");
 if (booth) {
   const get = id => document.getElementById(id);
