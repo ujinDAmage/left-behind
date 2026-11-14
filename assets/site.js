@@ -26,7 +26,8 @@ function markStory(id) {
 
 for (const figure of document.querySelectorAll("[data-photo]")) {
   const photo = window.EXHIBIT_PHOTOS?.[figure.dataset.photo];
-  if (!photo?.file) continue;
+  if (!photo?.file && !photo?.url) continue;
+  figure.classList.add("archive-figure");
   const img = figure.querySelector("img");
   const caption = figure.querySelector("figcaption");
   img.addEventListener("load", () => {
@@ -35,9 +36,12 @@ for (const figure of document.querySelectorAll("[data-photo]")) {
     caption.hidden = !photo.credit;
   });
   img.alt = photo.alt || img.alt;
-  caption.textContent = photo.credit || "";
+  const credit = document.createElement(photo.source ? "a" : "span");
+  credit.textContent = photo.credit || "";
+  if (photo.source) credit.href = photo.source;
+  caption.replaceChildren(credit);
   img.loading = "eager";
-  img.src = new URL("photos/" + encodeURIComponent(photo.file), assetBase);
+  img.src = photo.file ? new URL("photos/" + encodeURIComponent(photo.file), assetBase) : photo.url;
 }
 
 const filters = [...document.querySelectorAll("[data-filter]")];
@@ -56,12 +60,21 @@ for (const reader of document.querySelectorAll("[data-reader]")) {
   const prev = reader.querySelector("[data-prev]");
   const next = reader.querySelector("[data-next]");
   const counter = reader.querySelector("[data-counter]");
-  const slider = reader.querySelector("#trail-position");
-  const trail = reader.querySelector(".trail");
+  const craft = reader.querySelector("[data-craft]");
+  const slider = reader.querySelector("[data-craft-control]");
+  const fold = reader.querySelector("[data-fold]");
+  const play = reader.querySelector("[data-play]");
+  let playback;
+  function pose(fraction, angle = fraction * 360) {
+    if (!craft) return;
+    craft.style.setProperty("--progress", fraction);
+    craft.style.setProperty("--turn", -angle + "deg");
+    craft.style.setProperty("--hop", Math.sin(fraction * Math.PI));
+  }
   let position = 0;
   const read = new Set([0]);
 
-  function show(index, animate = true) {
+  function show(index, animate = true, syncControl = true) {
     if (index < 0 || index >= scenes.length) return;
     position = index;
     read.add(index);
@@ -73,11 +86,14 @@ for (const reader of document.querySelectorAll("[data-reader]")) {
     if (prev) prev.disabled = index === 0;
     if (next) next.disabled = index === scenes.length - 1;
     if (counter) counter.textContent = (index + 1) + " / " + scenes.length;
-    if (slider) {
-      slider.value = String(index);
-      slider.setAttribute("aria-valuetext", scenes[index].querySelector("h3").textContent);
-      trail.style.setProperty("--step", index);
-      trail.style.setProperty("--lift", index === 1 ? 1 : 0);
+    if (craft) {
+      craft.dataset.step = String(index);
+      craft.style.setProperty("--frame", index);
+      if (!slider || syncControl) {
+        const angle = slider?.max === "360" ? index * 90 : undefined;
+        if (slider) slider.value = String(angle ?? Math.round(index / (scenes.length - 1) * 100));
+        pose(index / (scenes.length - 1), angle);
+      }
     }
     if (animate && !reducedMotion.matches && scenes[index].animate) {
       const frames = reader.classList.contains("flip")
@@ -89,7 +105,32 @@ for (const reader of document.querySelectorAll("[data-reader]")) {
 
   prev?.addEventListener("click", () => show(position - 1));
   next?.addEventListener("click", () => show(position + 1));
-  slider?.addEventListener("input", () => show(Number(slider.value)));
+  slider?.addEventListener("input", () => {
+    const value = Number(slider.value);
+    const ratio = value / Number(slider.max);
+    const rotation = slider.max === "360";
+    pose(ratio, rotation ? value : undefined);
+    const index = rotation ? Math.round(value / 90) % 4 : Math.round(ratio * (scenes.length - 1));
+    const nextIndex = Math.min(index, scenes.length - 1);
+    if (nextIndex !== position) show(nextIndex, false, false);
+  });
+  fold?.addEventListener("click", () => {
+    const open = craft.classList.toggle("is-open");
+    fold.setAttribute("aria-expanded", String(open));
+  });
+  play?.addEventListener("click", () => {
+    if (playback) return;
+    show(0);
+    play.disabled = true;
+    playback = setInterval(() => {
+      show(position + 1);
+      if (position === scenes.length - 1) {
+        clearInterval(playback);
+        playback = undefined;
+        play.disabled = false;
+      }
+    }, 900);
+  });
   for (const choice of choices) choice.addEventListener("click", () => show(Number(choice.dataset.sceneIndex)));
   show(0, false);
 }
