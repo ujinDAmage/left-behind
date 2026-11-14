@@ -1,16 +1,19 @@
 # Left Behind
 
-An interactive space museum for the 2026 Sarawak Space Challenge. Explore Apollo 11’s lunar reflector and Opportunity’s last days on Mars.
+An interactive student exhibition for the Sarawak Space Challenge 2026. The static site contains ten exhibits, a lunar laser lab, and a four-cut photo booth.
 
-## Play the exhibits
+## Preview and publish
 
-- **Moon:** Reveal the reflector’s story, adjust the simulated Moon distance and fire a laser pulse.
-- **Mars:** Follow Opportunity from its landing to its final transmission, with links to NASA’s original mission records.
+Open `index.html` in a modern browser to preview the pages. GitHub Pages serves the root of `main`. To check publishing, use **Settings → Pages** in this repository.
 
-The entire site is in `index.html`. Open it in a browser to preview it locally. To publish it, select **Settings → Pages → Deploy from a branch → main → / (root) → Save**.
+## Add exhibit photos
 
-## Data and AI disclosure
+1. Put an image in `assets/photos/`, for example `apollo-11.jpg`.
+2. Add the corresponding entry in `assets/photos.js`. The keys match the names in `stories/` without the `.html` extension.
+3. Fill in the file name, descriptive alt text, and credit. The picture will appear on the exhibit page and collection page. A missing image keeps the placeholder visible.
 
-The site’s Sources section credits NASA and JPL mission records. The lunar experiment calculates round-trip light travel time from simulated distances. The artwork is rendered procedurally in code.
+The booth processes personal photos locally in the visitor’s browser. It supports uploads and an optional camera on a secure origin.
 
-ChatGPT assisted with the site code, artwork code and exhibit text drafts.
+## Research and disclosure
+
+Each exhibit links to mission evidence and labels its fictional retelling. The trails are illustrative and the lunar laser lab uses simulated distances. ChatGPT assisted with the site code, artwork code, and story drafts.
