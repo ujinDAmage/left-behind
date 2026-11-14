@@ -4,6 +4,25 @@ const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 const storageKey = "left-behind-visited";
 const assetBase = new URL(".", document.currentScript.src);
 
+const themeButton = document.querySelector("[data-theme-switch]");
+if (themeButton) {
+  const themes = ["light", "moon", "mars"];
+  const labels = ["Light", "Dark Moon", "Red Mars"];
+  let theme = 0;
+  try { theme = Math.max(0, themes.indexOf(localStorage.getItem("left-behind-theme"))); } catch {}
+  function applyTheme() {
+    document.documentElement.dataset.theme = themes[theme];
+    themeButton.title = labels[theme] + " theme. Click to change.";
+    themeButton.setAttribute("aria-label", labels[theme] + " theme. Switch to " + labels[(theme + 1) % themes.length]);
+  }
+  applyTheme();
+  themeButton.addEventListener("click", () => {
+    theme = (theme + 1) % themes.length;
+    applyTheme();
+    try { localStorage.setItem("left-behind-theme", themes[theme]); } catch {}
+  });
+}
+
 function visitedStories() {
   try {
     const visited = JSON.parse(localStorage.getItem(storageKey) || "[]");
@@ -85,7 +104,7 @@ for (const reader of document.querySelectorAll("[data-reader]")) {
     }
     if (prev) prev.disabled = index === 0;
     if (next) next.disabled = index === scenes.length - 1;
-    if (counter) counter.textContent = (index + 1) + " / " + scenes.length;
+    if (counter) counter.textContent = "Page " + (index + 1) + " of " + scenes.length;
     if (craft) {
       craft.dataset.step = String(index);
       craft.style.setProperty("--frame", index);
@@ -199,6 +218,51 @@ for (const lab of document.querySelectorAll("[data-laser]")) {
   });
 }
 
+for (const activity of document.querySelectorAll("[data-work]")) {
+  for (const button of activity.querySelectorAll("[data-answer]")) {
+    button.addEventListener("click", () => {
+      const answer = button.dataset.answer === activity.dataset.correct;
+      activity.querySelector(".activity-result").textContent = answer ? activity.dataset.yes : activity.dataset.no;
+    });
+  }
+}
+
+const golf = document.getElementById("golf-angle");
+if (golf) {
+  golf.addEventListener("input", () => { document.getElementById("golf-angle-value").value = golf.value + "°"; });
+  document.getElementById("golf-hit").addEventListener("click", () => {
+    const angle = Number(golf.value) * Math.PI / 180;
+    const distance = (8 ** 2) * Math.sin(2 * angle) / 1.62;
+    const ball = document.querySelector(".golf-track i");
+    ball.getAnimations?.().forEach(animation => animation.cancel());
+    const finish = 5 + distance / 40 * 84;
+    if (!reducedMotion.matches && ball.animate) {
+      ball.animate([{left:"5%",bottom:"6px"},{left:(5 + finish) / 2 + "%",bottom:(17 + Math.sin(angle) * 60) + "px"},{left:finish + "%",bottom:"6px"}],{duration:700,fill:"forwards"});
+    } else {
+      ball.style.left = finish + "%";
+    }
+    document.getElementById("golf-result").textContent = "Simulated range: " + distance.toFixed(1) + " m. Try a different angle.";
+  });
+}
+const scan = document.getElementById("viking-scan");
+if (scan) {
+  let strips = 0;
+  function renderScan() {
+    document.querySelector(".scan-image").style.setProperty("--unseen", (6 - strips) / 6 * 100 + "%");
+    document.getElementById("viking-result").textContent = strips + " of 6 strips";
+    scan.disabled = strips === 6;
+  }
+  scan.addEventListener("click", () => { strips++; renderScan(); });
+  document.getElementById("viking-reset").addEventListener("click", () => { strips = 0; renderScan(); });
+}
+const dust = document.getElementById("dust-slider");
+if (dust) dust.addEventListener("input", () => {
+  const light = 100 - Number(dust.value);
+  document.getElementById("dust-value").value = dust.value + "%";
+  document.getElementById("solar-meter").value = light;
+  document.getElementById("dust-result").textContent = light + "% of the clear-sky estimate.";
+});
+
 const booth = document.querySelector("[data-booth]");
 if (booth) {
   const get = id => document.getElementById(id);
@@ -220,7 +284,10 @@ if (booth) {
   const frames = {
     lunar: { paper: "#14151b", ink: "#f5f2e7", panel: "#242733", line: "#aeb2c7", filter: "grayscale(100%) contrast(115%)" },
     mars: { paper: "#6d2f22", ink: "#fff0db", panel: "#8a4635", line: "#ffd2a9", filter: "sepia(24%) saturate(115%)" },
-    archive: { paper: "#efe5d0", ink: "#2f2830", panel: "#d8cab6", line: "#604a42", filter: "sepia(12%)" }
+    archive: { paper: "#efe5d0", ink: "#2f2830", panel: "#d8cab6", line: "#604a42", filter: "sepia(12%)" },
+    midnight: { paper:"#25204b", ink:"#f3d9ff", panel:"#40376a", line:"#cbb8fb", filter:"saturate(105%)" },
+    sunrise: { paper:"#e59363", ink:"#342015", panel:"#c67551", line:"#42271e", filter:"sepia(18%) saturate(120%)" },
+    silver: { paper:"#dce1e5", ink:"#252a32", panel:"#bdc6cd", line:"#5d6570", filter:"grayscale(100%)" }
   };
   const requested = new URLSearchParams(location.search).get("exhibit");
   if (Object.hasOwn(window.EXHIBITS, requested)) {
@@ -240,55 +307,86 @@ if (booth) {
     ctx.restore();
   }
 
+  const layouts = {
+    strip: {width:480,height:1120,columns:1,cell:204},
+    square: {width:900,height:900,columns:2,cell:320},
+    story: {width:720,height:1280,columns:2,cell:482}
+  };
+  const addOns = ["booth-size","booth-border","booth-date","booth-fact","booth-caption"];
   function draw() {
     const theme = frames[frame.value];
     const record = window.EXHIBITS[exhibit.value];
+    const layout = layouts[get("booth-size").value];
+    const {width,height,columns,cell} = layout;
+    canvas.width = width;
+    canvas.height = height;
+    const padding = 34;
+    const gap = 14;
+    const frameWidth = (width - padding * 2 - (columns - 1) * gap) / columns;
     ctx.fillStyle = theme.paper;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, width, height);
     ctx.fillStyle = theme.ink;
     ctx.font = "bold 32px monospace";
-    ctx.fillText("LEFT BEHIND", 33, 46);
+    ctx.fillText("LEFT BEHIND", padding, 46);
     ctx.font = "15px monospace";
-    ctx.fillText("SARAWAK / " + record.world.toUpperCase() + " EXHIBITION", 34, 73, 412);
+    ctx.fillText("SARAWAK / " + record.world.toUpperCase() + " EXHIBITION", padding, 73, width - padding * 2);
+    const border = get("booth-border").value;
+    if (border !== "plain") {
+      ctx.fillStyle = theme.line;
+      ctx.font = "17px sans-serif";
+      for (let y = 110; y < height - 24; y += 38) {
+        for (const x of [11,width - 22]) {
+          if (border === "film") ctx.fillRect(x,y,10,16);
+          else ctx.fillText("✦",x,y);
+        }
+      }
+    }
     for (let i = 0; i < 4; i++) {
-      const y = 92 + i * 218;
+      const x = padding + i % columns * (frameWidth + gap);
+      const y = 92 + Math.floor(i / columns) * (cell + gap);
       ctx.fillStyle = theme.panel;
-      ctx.fillRect(34, y, 412, 204);
+      ctx.fillRect(x, y, frameWidth, cell);
       if (photos[i]) {
-        cover(photos[i], 34, y, 412, 204, theme.filter);
+        cover(photos[i], x, y, frameWidth, cell, theme.filter);
       } else {
+        const cx = x + frameWidth / 2, cy = y + cell / 2;
         ctx.strokeStyle = theme.line;
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.ellipse(240, y + 99, 79, 25, -.45, 0, Math.PI * 2);
+        ctx.ellipse(cx, cy, 68, 23, -.45, 0, Math.PI * 2);
         ctx.stroke();
         ctx.beginPath();
-        ctx.arc(240, y + 99, 42, 0, Math.PI * 2);
+        ctx.arc(cx, cy, 37, 0, Math.PI * 2);
         ctx.stroke();
         ctx.fillStyle = theme.ink;
         ctx.font = "14px monospace";
-        ctx.fillText("FRAME 0" + (i + 1), 47, y + 187);
+        ctx.fillText("FRAME 0" + (i + 1), x + 13, y + cell - 16);
       }
     }
+    const footer = 92 + (4 / columns) * (cell + gap) + 28;
+    const lineWidth = width - padding * 2;
     ctx.fillStyle = theme.ink;
     ctx.font = "bold 22px monospace";
-    ctx.fillText(record.name.toUpperCase(), 34, 1000, 412);
+    ctx.fillText(record.name.toUpperCase(), padding, footer, lineWidth);
     ctx.font = "16px monospace";
-    ctx.fillText(name.value.trim() || "EXHIBITION PHOTO STRIP", 34, 1026, 412);
+    const date = get("booth-date").checked ? new Intl.DateTimeFormat("en-GB",{dateStyle:"medium"}).format(new Date()) : "";
+    const caption = get("booth-caption").value.trim();
+    ctx.fillText([name.value.trim(), caption, date].filter(Boolean).join(" · ") || "EXHIBITION PHOTO STRIP", padding, footer + 24, lineWidth);
+    if (!get("booth-fact").checked) return;
     ctx.font = "15px sans-serif";
     let line = "";
-    let y = 1054;
+    let y = footer + 48;
     for (const word of record.fact.split(" ")) {
       const next = line ? line + " " + word : word;
-      if (ctx.measureText(next).width > 410) {
-        ctx.fillText(line, 34, y);
+      if (ctx.measureText(next).width > lineWidth) {
+        ctx.fillText(line, padding, y);
         line = word;
-        y += 19;
+        y += 18;
       } else {
         line = next;
       }
     }
-    if (line) ctx.fillText(line, 34, y);
+    if (line) ctx.fillText(line, padding, y);
   }
 
   function updateStatus(message) {
@@ -380,6 +478,7 @@ if (booth) {
   exhibit.addEventListener("change", draw);
   frame.addEventListener("change", draw);
   name.addEventListener("input", draw);
+  for (const option of addOns) get(option).addEventListener("input", draw);
   get("clear-photos").addEventListener("click", () => {
     photoRevision++;
     photos.length = 0;

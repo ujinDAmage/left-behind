@@ -1,6 +1,6 @@
 # Left Behind
 
-An interactive student exhibition for the Sarawak Space Challenge 2026. The static site contains ten exhibits, a lunar laser lab, and a four-cut photo booth.
+An interactive student exhibition for the Sarawak Space Challenge 2026. The static site contains ten exhibits, an equipment lab with ten activities, and a photo booth.
 
 ## Preview and publish
 
@@ -16,4 +16,4 @@ The booth processes personal photos locally in the visitor’s browser. It suppo
 
 ## Research and disclosure
 
-Each exhibit links to mission evidence and labels its fictional retelling. The trails are illustrative and the lunar laser lab uses simulated distances. ChatGPT assisted with the site code, artwork code, and story drafts.
+Each exhibit links to mission evidence and presents a three-page history. The trails are illustrative and the lunar laser lab uses simulated distances. ChatGPT assisted with the site code, artwork code, and story drafts.
