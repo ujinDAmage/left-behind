@@ -48,3 +48,167 @@ body{isolation:isolate}body::before{content:"";position:fixed;inset:0;z-index:-1
 @keyframes paper-dust{0%{transform:translateX(-5%);opacity:.18}40%{opacity:.7}100%{transform:translateX(9%);opacity:.18}}@keyframes paper-light{40%{opacity:1}}@keyframes paper-launch{from{transform:translateY(22%)}to{transform:translateY(-120%)}}@keyframes paper-swing{from{transform:rotate(55deg)}45%{transform:rotate(-105deg)}}@keyframes paper-ball{0%{translate:-100% 0}45%{translate:-30% -80%}100%{translate:0 0}}@keyframes paper-drive{from{translate:-21% 0}to{translate:0 0}}@keyframes paper-photo{from{transform:rotate(-13deg) scale(.83)}70%{transform:rotate(4deg) scale(1.06)}}@keyframes paper-signal{0%{transform:scaleX(0);opacity:1}55%{transform:scaleX(1);opacity:1}100%{transform:scaleX(.1);opacity:0}}@keyframes launch-flame{0%{opacity:1}85%{opacity:.75}100%{opacity:0}to{transform:translate(-50%,-116px)}}@keyframes quake-cursor{0%{left:0;opacity:1}100%{left:99%;opacity:1}}
 @media(max-width:600px){.stage-block .craft-stage{height:clamp(290px,84vw,410px)}.stage-actions .button{font-size:.86rem}.book-spread{grid-template-columns:1fr}.book-spread::after{display:none}.history-book .media img{aspect-ratio:2.1}}
 @media(prefers-reduced-motion:reduce){.craft-stage.popup[data-step="1"] .stage-object{transform:translateY(-120%)}.quake-trace.is-playing::after{opacity:1;left:40%}}
+
+/* =====================================================================
+   ADDED: intro text, Deep space, and paper scenes for 7 more explorers
+   (Surveyor 3, Phoenix, Ingenuity, Pioneer 10, Dawn, NEAR Shoemaker, Kepler)
+   ===================================================================== */
+.map-intro{max-width:60ch;margin:-4px auto 26px;text-align:center;color:var(--muted);font-size:clamp(1rem,2vw,1.18rem)}
+.moon .pin-5{left:84%;top:42%}
+.mars .pin-5{left:84%;top:40%}.mars .pin-6{left:15%;top:38%}
+.map-world.space{grid-column:1/-1;aspect-ratio:2.7;margin-top:6px}
+.map-world.space .map-disc{inset:4% 0;border-radius:18px;box-shadow:inset 0 0 40px #0009;background:
+  radial-gradient(circle at 7% 50%,#f6d58e 0 4.5%,#f6d58e40 5% 9%,transparent 9.5%),
+  radial-gradient(1.4px 1.4px at 30px 24px,#fff 50%,transparent 51%) 0 0/110px 80px,
+  radial-gradient(1px 1px at 70px 60px,#ffe9c4 50%,transparent 51%) 0 0/150px 120px,
+  linear-gradient(100deg,#2a2440,#141526 60%,#0c0d18)}
+.map-world.space .map-disc::before{display:none}
+.space .pin-0{left:25%;top:60%}.space .pin-1{left:45%;top:30%}.space .pin-2{left:66%;top:64%}.space .pin-3{left:86%;top:34%}
+.image-placeholder.space{background:radial-gradient(ellipse at 50% 70%,#2d2f58,#131427 72%)}
+.space .planet-mark{background:radial-gradient(circle at 32% 27%,#d3d9ff,#6470bf 50%,#1f2142 79%)}
+@media (max-width:760px){.map-world.space{aspect-ratio:1.5}}
+
+/* shared paper craft */
+.craft-stage .paper-craft{position:absolute;z-index:5;transition:transform .8s cubic-bezier(.2,.8,.25,1.1),opacity .5s;filter:drop-shadow(10px 10px 4px #1e142a70)}
+.craft-stage.space .stage-deep{display:none}
+.craft-stage.space .paper-sky{background:
+  radial-gradient(1.4px 1.4px at 30px 24px,#fff 50%,transparent 51%) 0 0/110px 80px,
+  radial-gradient(1px 1px at 70px 60px,#ffe9c4 50%,transparent 51%) 0 0/150px 120px,
+  radial-gradient(ellipse at 28% 30%,#3a3160,#141526 72%)}
+.paper-planet{position:absolute;z-index:3;right:7%;bottom:9%;width:30%;aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%,#fff6 0 7%,transparent 32%),var(--planet,#999);
+  box-shadow:inset -18px -14px 0 #0005,0 0 0 5px #ffffff10;transition:transform .9s cubic-bezier(.2,.8,.25,1),filter .6s,opacity .6s}
+
+/* Surveyor 3 + Phoenix: landers */
+.craft-lander{left:34%;bottom:17%;width:30%;height:50%}
+.craft-lander i{left:18%;right:18%;top:44%;height:24%;background:#ddd6c6;clip-path:polygon(8% 0,92% 0,100% 100%,0 100%)}
+.craft-lander em{left:0;right:0;top:66%;bottom:0;background:linear-gradient(62deg,transparent 44%,#c9c2b3 44% 56%,transparent 56%) 0 0/34% 100% no-repeat,linear-gradient(90deg,transparent 45%,#c9c2b3 45% 55%,transparent 55%) 50% 0/20% 100% no-repeat,linear-gradient(-62deg,transparent 44%,#c9c2b3 44% 56%,transparent 56%) 100% 0/34% 100% no-repeat}
+.moon .craft-lander b{left:44%;width:12%;top:0;height:46%;background:linear-gradient(#2f4479 0 42%,#b8b2a4 42%)}
+.mars .craft-lander b{left:-22%;right:-22%;top:36%;height:30%;background:radial-gradient(circle at 15% 50%,#c4914a 0 14%,#8a6331 14.5% 15.5%,transparent 16%),radial-gradient(circle at 85% 50%,#c4914a 0 14%,#8a6331 14.5% 15.5%,transparent 16%)}
+.craft-stage[data-craft=lander] .stage-object{left:64%;bottom:15%;width:15%;height:7%;z-index:6;background:#3b2b33;opacity:0;transition:opacity .5s;border-radius:3px}
+.mars[data-craft=lander] .stage-object{background:linear-gradient(90deg,#5b2712 0 28%,#f4f8ff 28% 44%,#5b2712 44% 60%,#e9f0ff 60% 70%,#5b2712 70%)}
+.craft-stage[data-craft=lander][data-step="1"] .stage-object,.craft-stage[data-craft=lander][data-step="2"] .stage-object{opacity:1}
+.craft-stage[data-craft=lander][data-step="1"] .craft-lander{transform:rotate(-2deg)}
+.moon[data-craft=lander] .stage-beam{left:12%;bottom:16%;width:12%;height:28%;z-index:6;opacity:0;transition:opacity .6s,transform .8s;transform:translateX(-40%);
+  background:radial-gradient(circle at 30% 16%,#fffdf8 0 13%,transparent 14%),radial-gradient(circle at 72% 20%,#fffdf8 0 11%,transparent 12%),linear-gradient(90deg,transparent 18%,#fffdf8 18% 42%,transparent 42% 60%,#fffdf8 60% 82%,transparent 82%) 0 100%/100% 70% no-repeat}
+.moon[data-craft=lander][data-step="2"] .stage-beam{opacity:1;transform:none}
+.mars[data-craft=lander] .stage-beam{inset:0;z-index:7;opacity:0;transition:opacity .9s;background:linear-gradient(#e8f0fa66,#dfe9f7aa)}
+.mars[data-craft=lander][data-step="2"] .stage-beam{opacity:1}
+
+/* Ingenuity: helicopter */
+.craft-heli{left:44%;bottom:19%;width:13%;height:24%}
+.craft-heli i{left:30%;right:30%;top:42%;height:26%;background:#e8e2d4;border-radius:3px}
+.craft-heli b{left:-35%;right:-35%;top:12%;height:22%;background:linear-gradient(#2b2a36 0 22%,transparent 22% 58%,#2b2a36 58% 80%,transparent 80%),linear-gradient(90deg,transparent 47%,#9d978a 47% 53%,transparent 53%)}
+.craft-heli em{left:8%;right:8%;top:66%;bottom:0;background:linear-gradient(62deg,transparent 44%,#bdb6a6 44% 56%,transparent 56%) 0 0/34% 100% no-repeat,linear-gradient(90deg,transparent 45%,#bdb6a6 45% 55%,transparent 55%) 50% 0/20% 100% no-repeat,linear-gradient(-62deg,transparent 44%,#bdb6a6 44% 56%,transparent 56%) 100% 0/34% 100% no-repeat}
+.craft-stage[data-craft=heli] .stage-object{left:22%;bottom:15%;width:48%;height:26%;z-index:4;opacity:1;transition:opacity .6s,transform .8s;
+  background:radial-gradient(circle at 18% 88%,#2b2a36 0 9%,transparent 9.5%),radial-gradient(circle at 50% 88%,#2b2a36 0 9%,transparent 9.5%),radial-gradient(circle at 82% 88%,#2b2a36 0 9%,transparent 9.5%),linear-gradient(#e3ddcf,#e3ddcf) 50% 30%/86% 46% no-repeat,linear-gradient(#bdb6a6,#bdb6a6) 72% 0/5% 30% no-repeat}
+.craft-stage[data-craft=heli][data-step="0"] .craft-heli{transform:translate(-40%,10%) scale(.6)}
+.craft-stage[data-craft=heli][data-step="1"] .craft-heli,.craft-stage[data-craft=heli][data-step="2"] .craft-heli{transform:translate(70%,0)}
+.craft-stage[data-craft=heli][data-step="1"] .stage-object,.craft-stage[data-craft=heli][data-step="2"] .stage-object{transform:translateX(-30%);opacity:.9}
+.craft-stage[data-craft=heli][data-step="1"].is-playing .craft-heli{animation:heli-hop 2.4s ease-in-out forwards}
+.craft-stage[data-craft=heli][data-step="1"] .craft-heli b{animation:rotor .12s linear infinite}
+.craft-stage[data-craft=heli][data-step="2"] .craft-heli{transform:translate(70%,0) rotate(7deg)}
+.craft-stage[data-craft=heli][data-step="2"] .craft-heli b{clip-path:polygon(0 0,78% 0,70% 50%,100% 52%,100% 100%,0 100%)}
+@keyframes heli-hop{0%{transform:translate(70%,0)}30%,70%{transform:translate(70%,-115%)}100%{transform:translate(70%,0)}}
+@keyframes rotor{50%{transform:scaleX(.55)}}
+
+/* Pioneer 10: probe past Jupiter */
+.craft-probe{left:12%;top:24%;width:22%;height:40%}
+.craft-probe i{left:4%;right:4%;top:0;height:42%;background:#efe9dc;border-radius:50%;box-shadow:inset 0 -7px 0 #c9bfae}
+.craft-probe b{left:47%;width:6%;top:30%;height:62%;background:#c9a24a}
+.craft-probe em{left:28%;right:28%;top:46%;height:20%;background:#8f7966;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.craft-stage[data-craft=probe] .paper-planet{background:radial-gradient(circle at 34% 30%,#fff5 0 7%,transparent 32%),repeating-linear-gradient(172deg,#e6c79c 0 9%,#b8784a 9% 14%,#dcae7c 14% 22%,#c98d5b 22% 26%);transform:scale(.35) translate(60%,-90%)}
+.craft-stage[data-craft=probe][data-step="1"] .paper-planet{transform:scale(1.25) translate(-6%,-6%)}
+.craft-stage[data-craft=probe][data-step="2"] .paper-planet{transform:scale(.18) translate(-260%,-160%);opacity:.7}
+.craft-stage[data-craft=probe][data-step="1"] .craft-probe{transform:translate(40%,-10%) rotate(-12deg)}
+.craft-stage[data-craft=probe][data-step="2"] .craft-probe{transform:translate(260%,10%) scale(.45) rotate(10deg)}
+.craft-stage[data-craft=probe] .stage-dust{inset:0;z-index:2;opacity:1;transition:opacity .6s;background:radial-gradient(circle at 20px 20px,#8a7a6a 0 4px,transparent 5px) 0 0/80px 60px,radial-gradient(circle at 50px 40px,#6e6052 0 6px,transparent 7px) 0 0/120px 90px}
+.craft-stage[data-craft=probe] .stage-dust{opacity:1!important}.craft-stage[data-craft=probe]:not([data-step="0"]) .stage-dust{opacity:0!important}
+
+/* Dawn: Vesta then Ceres */
+.craft-dawn{left:6%;top:20%;width:46%;height:26%;transform:rotate(-10deg)}
+.craft-dawn i{left:42%;width:16%;top:20%;height:60%;background:#e0b54a;border-radius:2px}
+.craft-dawn b{left:0;right:0;top:38%;height:24%;background:linear-gradient(90deg,#2f4479 0 41%,transparent 41% 59%,#2f4479 59%);box-shadow:inset 0 0 0 2px #6b8fd6}
+.craft-dawn em{left:46%;width:8%;top:80%;height:70%;background:linear-gradient(#9cc4ff,#9cc4ff00);clip-path:polygon(20% 0,80% 0,50% 100%);transition:opacity .5s}
+.craft-stage[data-craft=dawn] .paper-planet{background:radial-gradient(circle at 34% 30%,#fff5 0 7%,transparent 32%),#a99a86;transform:scale(.6)}
+.craft-stage[data-craft=dawn]:not([data-step="0"]) .paper-planet{background:radial-gradient(circle at 46% 42%,#fff 0 3%,transparent 3.5%),radial-gradient(circle at 52% 46%,#fff 0 1.6%,transparent 2%),radial-gradient(circle at 34% 30%,#fff3 0 7%,transparent 32%),#86817b;transform:scale(1.15)}
+.craft-stage[data-craft=dawn][data-step="1"] .craft-dawn{transform:translate(12%,10%) rotate(-4deg)}
+.craft-stage[data-craft=dawn][data-step="2"] .craft-dawn{transform:translate(28%,24%) rotate(8deg) scale(.8)}
+.craft-stage[data-craft=dawn][data-step="2"] .craft-dawn em{opacity:0}
+
+/* NEAR Shoemaker: landing on Eros */
+.craft-stage[data-craft=near] .paper-planet{width:56%;aspect-ratio:2.2;right:-4%;bottom:6%;border-radius:58% 42% 55% 45%/48% 60% 40% 52%;
+  background:radial-gradient(circle at 30% 50%,#7f705d 0 7%,transparent 7.5%),radial-gradient(circle at 70% 60%,#7f705d 0 5%,transparent 5.5%),radial-gradient(circle at 34% 30%,#fff3 0 7%,transparent 32%),#a08f78;transform:scale(.7)}
+.craft-stage[data-craft=near]:not([data-step="0"]) .paper-planet{transform:scale(1.05)}
+.craft-near{left:14%;top:14%;width:20%;height:30%}
+.craft-near i{left:38%;right:38%;top:36%;height:28%;background:#e0b54a}
+.craft-near b{left:0;right:0;top:42%;height:16%;background:linear-gradient(90deg,#2f4479 0 36%,transparent 36% 64%,#2f4479 64%)}
+.craft-near em{left:44%;right:44%;top:0;bottom:0;background:linear-gradient(#2f4479 0 34%,transparent 34% 66%,#2f4479 66%)}
+.craft-stage[data-craft=near][data-step="1"] .craft-near{transform:translate(120%,50%)}
+.craft-stage[data-craft=near][data-step="2"] .craft-near{transform:translate(200%,150%) rotate(18deg) scale(.85)}
+
+/* Kepler: watching a star dim */
+.craft-stage[data-craft=kepler] .paper-planet{right:10%;top:14%;bottom:auto;width:24%;background:radial-gradient(circle,#fff3c4 0 30%,#ffd166 60%,#f2a541);box-shadow:0 0 40px 12px #ffd16666}
+.craft-stage[data-craft=kepler] .paper-planet::after{content:"";position:absolute;width:20%;aspect-ratio:1;border-radius:50%;background:#1b1830;left:-30%;top:40%;opacity:0;transition:left 1.6s linear,opacity .3s}
+.craft-stage[data-craft=kepler][data-step="1"] .paper-planet{filter:brightness(.82)}
+.craft-stage[data-craft=kepler][data-step="1"] .paper-planet::after{opacity:1;left:44%}
+.craft-kepler{left:18%;top:28%;width:22%;height:52%;transform:rotate(-28deg)}
+.craft-kepler i{left:24%;right:24%;top:8%;bottom:10%;background:#ddd6c6;border-radius:6px;box-shadow:inset -6px 0 0 #b9b1a0}
+.craft-kepler b{left:24%;right:24%;top:0;height:14%;background:#1b2335;border-radius:50%}
+.craft-kepler em{left:-14%;width:36%;top:40%;height:40%;background:#2f4479;box-shadow:inset 0 0 0 2px #6b8fd6}
+.craft-stage[data-craft=kepler] .stage-dust{inset:0;z-index:2;opacity:0;transition:opacity .8s;background:radial-gradient(circle at 20px 20px,#6b8fd6 0 5px,transparent 6px) 0 0/90px 70px,radial-gradient(circle at 60px 45px,#d9a46c 0 4px,transparent 5px) 0 0/130px 100px,radial-gradient(circle at 40px 70px,#7fc27a 0 4px,transparent 5px) 0 0/160px 120px}
+.craft-stage[data-craft=kepler] .stage-dust{opacity:0!important;background-size:60px 50px,90px 70px,120px 90px!important}.craft-stage[data-craft=kepler][data-step="2"] .stage-dust{opacity:1!important}
+@media (prefers-reduced-motion:reduce){.craft-stage .paper-craft,.paper-planet{transition:none}.craft-stage .paper-craft *{animation:none!important}}
+
+/* ADDED: moving Moon and Mars on the home map */
+.map-world .map-disc::before{background-size:200% 100%!important;background-repeat:repeat-x!important;animation:planet-spin 70s linear infinite}
+.map-world .map-disc::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle at 20px 20px,#0000001f 0 9px,transparent 10px) 0 0/90px 80px,
+             radial-gradient(circle at 55px 50px,#00000014 0 14px,transparent 15px) 0 0/140px 120px;
+  mask-image:radial-gradient(circle at 42% 38%,#000 35%,transparent 72%);animation:planet-spin-dots 40s linear infinite}
+.map-world.mars .map-disc::after{background:radial-gradient(ellipse at 30px 30px,#5a241520 0 22px,transparent 23px) 0 0/120px 90px,radial-gradient(circle at 70px 60px,#4a1d1222 0 10px,transparent 11px) 0 0/150px 130px}
+.map-world.moon,.map-world.mars{animation:planet-float 7s ease-in-out infinite}
+.map-world.mars{animation-delay:-3.5s}
+.map-world.space .map-disc{animation:stars-drift 90s linear infinite}
+@keyframes planet-spin{from{background-position:0 50%}to{background-position:-200% 50%}}
+@keyframes planet-spin-dots{from{background-position:0 0,0 0}to{background-position:-360px 0,-560px 0}}
+@keyframes planet-float{50%{transform:translateY(-10px)}}
+@keyframes stars-drift{from{background-position:0 0,0 0,0 0,0 0}to{background-position:0 0,-440px 0,-600px 0,0 0}}
+@media (prefers-reduced-motion:reduce){.map-world,.map-world .map-disc,.map-world .map-disc::before,.map-world .map-disc::after{animation:none!important}}
+
+/* ADDED: 3D globe mode (assets/globe.js) */
+.has-globe .map-disc{background:none!important;box-shadow:none!important;overflow:visible}
+.has-globe .map-disc::before,.has-globe .map-disc::after{display:none!important}
+.globe-canvas{position:absolute;inset:0;width:100%!important;height:100%!important;cursor:grab;touch-action:none;filter:drop-shadow(0 18px 30px #1c162a55)}
+.has-globe.dragging .globe-canvas{cursor:grabbing}
+.has-globe .map-pins{pointer-events:none}
+.has-globe .map-pin{transition:opacity .25s}
+.has-globe h2{opacity:.85}
+.globe-hint{text-align:center;color:var(--muted);font:700 .72rem var(--mono);letter-spacing:.08em;text-transform:uppercase;margin:4px 0 0}
+.map-world.has-globe{animation:none!important}
+
+.map-world.space .map-disc::after{display:none!important}
+/* globe mode: small pins, label shows on hover / keyboard focus so close sites don't overlap */
+.has-globe .pin-object{width:26px!important;height:26px!important;font-size:.75rem;box-shadow:0 0 0 3px #f9e2b255}
+.has-globe .map-pin>span:last-child{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:3px;padding:3px 8px;border-radius:4px;background:#1e1d2be8;white-space:nowrap;opacity:0;transition:opacity .15s;pointer-events:none}
+.has-globe .map-pin:hover,.has-globe .map-pin:focus-visible{z-index:500!important}
+.has-globe .map-pin:hover>span:last-child,.has-globe .map-pin:focus-visible>span:last-child{opacity:1}
+
+/* Cartoon gallery and players */
+.sound-toggle{border:1px solid var(--line);background:var(--white);color:var(--ink);border-radius:999px;padding:.48rem .72rem;font-weight:700;white-space:nowrap;font-size:.78rem}
+.sound-toggle[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+.cartoon-list{display:grid;gap:12px;margin:0 auto 32px}
+.cartoon-row{display:grid;grid-template-columns:minmax(160px, 32%) minmax(0,1fr);align-items:center;gap:clamp(15px,4vw,42px);padding:clamp(10px,2vw,21px);border:1px solid var(--line);border-radius:23px;background:var(--white);box-shadow:0 5px 0 var(--line)}
+.cartoon-row h3{font-size:clamp(1.15rem,3vw,2.2rem);margin:0 0 .55rem}.cartoon-row h3 a{text-decoration:none}.cartoon-row h3 a:hover{text-decoration:underline}
+.cartoon-tile{display:block;border-radius:16px;overflow:hidden;background:#20254f;box-shadow:0 4px 0 #322850;transition:transform .25s}.cartoon-tile:hover,.cartoon-tile:focus-visible{transform:translateY(-3px)}
+.cartoon-tile canvas,.mission-film canvas{width:100%;height:auto;display:block}
+.mission-film{margin:clamp(18px,5vw,55px) 0;padding:clamp(12px,2.8vw,36px);border:1px solid var(--line);border-radius:26px;background:var(--white);box-shadow:0 6px 0 var(--line)}
+.mission-film h2{margin:0 0 16px}.mission-film canvas{border-radius:17px;background:#20244e}
+.film-caption{min-height:3em;font-size:clamp(1rem,2vw,1.18rem);margin:12px 0;color:var(--ink)}
+.film-controls,.film-chapters{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin:12px 0}
+.film-controls label{display:flex;align-items:center;gap:9px;flex:1 1 210px;font-weight:700;padding:0 6px}
+.film-controls label input{flex:1;min-width:80px}
+.film-chapters [aria-pressed=true]{background:var(--ink);color:var(--paper)}
+.mission-film details{margin-top:18px}.mission-film summary{cursor:pointer;font-weight:700}
+.team-gallery{margin:24px 0}.team-gallery figure{max-width:650px}.team-gallery h2{margin-bottom:12px}
+@media(max-width:600px){.header-inner{grid-template-columns:minmax(0,1fr) auto 44px}.header-inner .sound-toggle{grid-row:1;grid-column:2}.header-inner .theme-orb{grid-column:3}.cartoon-row{grid-template-columns:minmax(92px,37%) minmax(0,1fr);gap:12px}.cartoon-row .inline-link{font-size:.83rem}.cartoon-tile{border-radius:10px}.mission-film{border-radius:16px}}

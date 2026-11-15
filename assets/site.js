@@ -4,6 +4,47 @@ const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 const storageKey = "left-behind-visited";
 const assetBase = new URL(".", document.currentScript.src);
 
+const soundButton = document.createElement("button");
+soundButton.type = "button";
+soundButton.className = "sound-toggle";
+soundButton.textContent = "Play sound";
+soundButton.setAttribute("aria-pressed", "false");
+document.querySelector(".theme-orb")?.before(soundButton);
+const ambient = new Audio(new URL("audio/space-atmosphere.mp3", assetBase));
+const transitionSound = new Audio(new URL("audio/transition.mp3", assetBase));
+ambient.loop = true;
+ambient.volume = .23;
+transitionSound.volume = .24;
+let soundEnabled = false;
+let soundRevision = 0;
+function stopExhibitSound() {
+  soundRevision++;
+  soundEnabled = false;
+  for (const audio of [ambient, transitionSound]) {
+    audio.pause();
+    audio.currentTime = 0;
+  }
+  soundButton.textContent = "Play sound";
+  soundButton.setAttribute("aria-pressed", "false");
+}
+soundButton.addEventListener("click", async () => {
+  if (soundEnabled) return stopExhibitSound();
+  soundEnabled = true;
+  const revision = ++soundRevision;
+  soundButton.textContent = "Stop sound";
+  soundButton.setAttribute("aria-pressed", "true");
+  try { await ambient.play(); } catch {
+    if (revision === soundRevision) stopExhibitSound();
+  }
+});
+document.addEventListener("click", event => {
+  if (!soundEnabled || !event.target.closest("[data-chapter], [data-replay-film]")) return;
+  transitionSound.currentTime = 0;
+  transitionSound.play().catch(() => {});
+});
+window.addEventListener("pagehide", stopExhibitSound);
+document.addEventListener("mission-complete", event => markStory(event.target.dataset.cartoon));
+
 const themeButton = document.querySelector("[data-theme-switch]");
 if (themeButton) {
   const themes = ["light", "moon", "mars"];
@@ -70,75 +111,6 @@ for (const filter of filters) {
     for (const group of document.querySelectorAll("[data-world-group]")) {
       group.hidden = filter.dataset.filter !== "all" && filter.dataset.filter !== group.dataset.worldGroup;
     }
-  });
-}
-
-for (const reader of document.querySelectorAll("[data-reader]")) {
-  const scenes = [...reader.querySelectorAll(".scene")];
-  const choices = [...reader.querySelectorAll("[data-scene-index]")];
-  const prev = reader.querySelector("[data-prev]");
-  const next = reader.querySelector("[data-next]");
-  const counter = reader.querySelector("[data-counter]");
-  let position = 0;
-  const read = new Set([0]);
-
-  function show(index, animate = true) {
-    if (index < 0 || index >= scenes.length) return;
-    position = index;
-    read.add(index);
-    if (read.size === scenes.length) markStory(reader.dataset.story);
-    scenes.forEach((scene, i) => { scene.hidden = i !== index; });
-    for (const choice of choices) {
-      choice.setAttribute("aria-pressed", String(Number(choice.dataset.sceneIndex) === index));
-    }
-    if (prev) prev.disabled = index === 0;
-    if (next) next.disabled = index === scenes.length - 1;
-    if (counter) counter.textContent = "Page " + (index + 1) + " of " + scenes.length;
-    if (animate && !reducedMotion.matches && scenes[index].animate) {
-      const frames = [{ transform: "rotateY(-25deg)", opacity: .35 }, { transform: "rotateY(0)", opacity: 1 }];
-      scenes[index].animate(frames, { duration: 340, easing: "ease-out" });
-    }
-  }
-
-  prev?.addEventListener("click", () => show(position - 1));
-  next?.addEventListener("click", () => show(position + 1));
-  for (const choice of choices) choice.addEventListener("click", () => show(Number(choice.dataset.sceneIndex)));
-  show(0, false);
-}
-
-for (const block of document.querySelectorAll("[data-stage-block]")) {
-  const stage = block.querySelector("[data-craft]");
-  const buttons = [...block.querySelectorAll("[data-stage-action]")];
-  const feedback = block.querySelector(".stage-feedback");
-  const angleControl = block.querySelector("[data-stage-angle]");
-  let replay;
-  function pose(angle, step) {
-    const progress = step / 2;
-    stage.style.setProperty("--progress", progress);
-    stage.style.setProperty("--turn", -angle + "deg");
-    stage.style.setProperty("--hop", step === 1 ? .85 : 0);
-    stage.style.setProperty("--frame", step);
-    stage.dataset.step = String(step);
-  }
-  for (const button of buttons) {
-    button.addEventListener("click", () => {
-      const step = Number(button.dataset.stageAction);
-      const angle = step * 90;
-      if (angleControl) angleControl.value = angle;
-      pose(angle, step);
-      stage.classList.add("is-open");
-      stage.classList.remove("is-playing");
-      cancelAnimationFrame(replay);
-      replay = requestAnimationFrame(() => { replay = requestAnimationFrame(() => stage.classList.add("is-playing")); });
-      for (const choice of buttons) choice.setAttribute("aria-pressed", String(choice === button));
-      feedback.textContent = button.dataset.description;
-    });
-  }
-  angleControl?.addEventListener("input", () => {
-    const angle = Number(angleControl.value);
-    pose(angle, Math.min(2, Math.round(angle / 90) % 4));
-    for (const choice of buttons) choice.setAttribute("aria-pressed", "false");
-    feedback.textContent = "Carousel angle: " + angle + "°.";
   });
 }
 
@@ -242,6 +214,7 @@ if (quakePlay) {
     status.textContent = text;
   }
   quakeStop.addEventListener("click", () => { sequence++; finish("Playback stopped."); });
+  soundButton.addEventListener("click", () => { if (!soundEnabled && quakePlay.disabled) { sequence++; finish("Playback stopped."); } });
   quakePlay.addEventListener("click", async () => {
     const id = ++sequence;
     quakePlay.disabled = true;
@@ -332,7 +305,7 @@ if (booth) {
   const requested = new URLSearchParams(location.search).get("exhibit");
   if (Object.hasOwn(window.EXHIBITS, requested)) {
     exhibit.value = requested;
-    if (window.EXHIBITS[requested].world === "Mars") frame.value = "mars";
+
   }
 
   function cover(image, x, y, width, height, filter) {
@@ -353,8 +326,14 @@ if (booth) {
     story: {width:720,height:1280,columns:2,cell:482}
   };
   const addOns = ["booth-size","booth-border","booth-date","booth-fact","booth-caption"];
+  const souvenirArt = document.createElement("canvas");
+  souvenirArt.width = 900;
+  souvenirArt.height = 480;
   function draw() {
-    const theme = frames[frame.value];
+    const mission = frame.value === "mission" && window.CartoonExhibits?.[exhibit.value];
+    const theme = mission
+      ? {paper:mission[0],ink:"#fff8eb",panel:"#100d2d",line:mission[1],filter:"none"}
+      : frames[frame.value] || frames.midnight;
     const record = window.EXHIBITS[exhibit.value];
     const layout = layouts[get("booth-size").value];
     const {width,height,columns,cell} = layout;
@@ -365,6 +344,39 @@ if (booth) {
     const frameWidth = (width - padding * 2 - (columns - 1) * gap) / columns;
     ctx.fillStyle = theme.paper;
     ctx.fillRect(0, 0, width, height);
+    if (mission) {
+      missionArt(souvenirArt, exhibit.value, 1.2);
+      ctx.save();
+      ctx.globalAlpha = .43;
+      const margin = 6;
+      ctx.strokeStyle = mission[1];
+      ctx.lineWidth = 3;
+      ctx.strokeRect(margin, margin, width - 2 * margin, height - 2 * margin);
+      ctx.globalAlpha = 1;
+      const motif = Object.keys(window.CartoonExhibits).indexOf(exhibit.value);
+      for (let i = 0; i < 12; i++) {
+        const y = 102 + i * (height - 155) / 11;
+        for (const x of [18,width - 18]) {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate((motif * 19 + i * 27) * Math.PI / 180);
+          ctx.beginPath();
+          const sides = 3 + motif % 6;
+          for (let j = 0; j < sides; j++) {
+            const angle = j * Math.PI * 2 / sides;
+            const radius = 4 + (j + motif) % 3;
+            if (j === 0) ctx.moveTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+            else ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+          }
+          ctx.closePath(); ctx.stroke(); ctx.restore();
+        }
+      }
+      ctx.save();
+      ctx.beginPath(); ctx.roundRect(width - 134, 10, 120, 64, 12); ctx.clip();
+      ctx.drawImage(souvenirArt,width - 134,10,120,64);
+      ctx.restore();
+      ctx.restore();
+    }
     ctx.fillStyle = theme.ink;
     ctx.font = "bold 32px monospace";
     ctx.fillText("LEFT BEHIND", padding, 46);
@@ -386,6 +398,11 @@ if (booth) {
       const y = 92 + Math.floor(i / columns) * (cell + gap);
       ctx.fillStyle = theme.panel;
       ctx.fillRect(x, y, frameWidth, cell);
+      if (mission) {
+        ctx.strokeStyle = mission[1];
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x - 2, y - 2, frameWidth + 4, cell + 4);
+      }
       if (photos[i]) {
         cover(photos[i], x, y, frameWidth, cell, theme.filter);
       } else {
@@ -433,7 +450,7 @@ if (booth) {
     status.textContent = message;
     capture.disabled = photos.length >= 4;
     certificate.disabled = visitedStories().length === 0;
-    certificate.title = certificate.disabled ? "Finish any exhibit to unlock your certificate" : "";
+    certificate.title = certificate.disabled ? "Watch a mission animation to the end to unlock your certificate" : "";
     draw();
   }
 
@@ -515,7 +532,7 @@ if (booth) {
     }, "image/png");
   }
 
-  exhibit.addEventListener("change", draw);
+  exhibit.addEventListener("change", () => { frame.value = "mission"; draw(); });
   frame.addEventListener("change", draw);
   name.addEventListener("input", draw);
   for (const option of addOns) get(option).addEventListener("input", draw);
