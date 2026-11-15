@@ -188,7 +188,6 @@ if (booth) {
   const canvas = get("strip");
   const ctx = canvas.getContext("2d");
   const exhibit = get("booth-exhibit");
-  const frame = get("booth-frame");
   const name = get("booth-name");
   const upload = get("photo-upload");
   const video = get("booth-camera");
@@ -200,27 +199,18 @@ if (booth) {
   const photos = [];
   let stream;
   let photoRevision = 0;
-  const frames = {
-    lunar: { paper: "#14151b", ink: "#f5f2e7", panel: "#242733", line: "#aeb2c7", filter: "grayscale(100%) contrast(115%)" },
-    mars: { paper: "#6d2f22", ink: "#fff0db", panel: "#8a4635", line: "#ffd2a9", filter: "sepia(24%) saturate(115%)" },
-    archive: { paper: "#efe5d0", ink: "#2f2830", panel: "#d8cab6", line: "#604a42", filter: "sepia(12%)" },
-    midnight: { paper:"#25204b", ink:"#f3d9ff", panel:"#40376a", line:"#cbb8fb", filter:"saturate(105%)" },
-    sunrise: { paper:"#e59363", ink:"#342015", panel:"#c67551", line:"#42271e", filter:"sepia(18%) saturate(120%)" },
-    silver: { paper:"#dce1e5", ink:"#252a32", panel:"#bdc6cd", line:"#5d6570", filter:"grayscale(100%)" }
-  };
   const requested = new URLSearchParams(location.search).get("exhibit");
   if (Object.hasOwn(window.EXHIBITS, requested)) {
     exhibit.value = requested;
 
   }
 
-  function cover(image, x, y, width, height, filter) {
+  function cover(image, x, y, width, height) {
     const scale = Math.max(width / image.width, height / image.height);
     ctx.save();
     ctx.beginPath();
     ctx.rect(x, y, width, height);
     ctx.clip();
-    ctx.filter = filter;
     ctx.drawImage(image, x + (width - image.width * scale) / 2, y + (height - image.height * scale) / 2,
       image.width * scale, image.height * scale);
     ctx.restore();
@@ -236,10 +226,10 @@ if (booth) {
   souvenirArt.width = 900;
   souvenirArt.height = 480;
   function draw() {
-    const mission = frame.value === "mission" && window.CartoonExhibits?.[exhibit.value];
+    const mission = window.CartoonExhibits?.[exhibit.value];
     const theme = mission
-      ? {paper:mission[0],ink:"#fff8eb",panel:"#100d2d",line:mission[1],filter:"none"}
-      : frames[frame.value] || frames.midnight;
+      ? {paper:mission[0],ink:"#fff8eb",panel:"#100d2d",line:mission[1]}
+      : {paper:"#25204b",ink:"#f3d9ff",panel:"#40376a",line:"#cbb8fb"};
     const record = window.EXHIBITS[exhibit.value];
     const layout = layouts[get("booth-size").value];
     const {width,height,columns,cell} = layout;
@@ -310,7 +300,7 @@ if (booth) {
         ctx.strokeRect(x - 2, y - 2, frameWidth + 4, cell + 4);
       }
       if (photos[i]) {
-        cover(photos[i], x, y, frameWidth, cell, theme.filter);
+        cover(photos[i], x, y, frameWidth, cell);
       } else {
         const cx = x + frameWidth / 2, cy = y + cell / 2;
         ctx.strokeStyle = theme.line;
@@ -438,8 +428,7 @@ if (booth) {
     }, "image/png");
   }
 
-  exhibit.addEventListener("change", () => { frame.value = "mission"; draw(); });
-  frame.addEventListener("change", draw);
+  exhibit.addEventListener("change", draw);
   name.addEventListener("input", draw);
   for (const option of addOns) get(option).addEventListener("input", draw);
   get("clear-photos").addEventListener("click", () => {
