@@ -4,45 +4,6 @@ const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 const storageKey = "left-behind-visited";
 const assetBase = new URL(".", document.currentScript.src);
 
-const soundButton = document.createElement("button");
-soundButton.type = "button";
-soundButton.className = "sound-toggle";
-soundButton.textContent = "Play sound";
-soundButton.setAttribute("aria-pressed", "false");
-document.querySelector(".theme-orb")?.before(soundButton);
-const ambient = new Audio(new URL("audio/space-atmosphere.mp3", assetBase));
-const transitionSound = new Audio(new URL("audio/transition.mp3", assetBase));
-ambient.loop = true;
-ambient.volume = .23;
-transitionSound.volume = .24;
-let soundEnabled = false;
-let soundRevision = 0;
-function stopExhibitSound() {
-  soundRevision++;
-  soundEnabled = false;
-  for (const audio of [ambient, transitionSound]) {
-    audio.pause();
-    audio.currentTime = 0;
-  }
-  soundButton.textContent = "Play sound";
-  soundButton.setAttribute("aria-pressed", "false");
-}
-soundButton.addEventListener("click", async () => {
-  if (soundEnabled) return stopExhibitSound();
-  soundEnabled = true;
-  const revision = ++soundRevision;
-  soundButton.textContent = "Stop sound";
-  soundButton.setAttribute("aria-pressed", "true");
-  try { await ambient.play(); } catch {
-    if (revision === soundRevision) stopExhibitSound();
-  }
-});
-document.addEventListener("click", event => {
-  if (!soundEnabled || !event.target.closest("[data-chapter], [data-replay-film]")) return;
-  transitionSound.currentTime = 0;
-  transitionSound.play().catch(() => {});
-});
-window.addEventListener("pagehide", stopExhibitSound);
 document.addEventListener("mission-complete", event => markStory(event.target.dataset.cartoon));
 
 const themeButton = document.querySelector("[data-theme-switch]");
@@ -178,6 +139,27 @@ for (const lab of document.querySelectorAll("[data-laser]")) {
   });
 }
 
+const labPicker = document.getElementById("lab-activity");
+if (labPicker) {
+  const labCards = [...document.querySelectorAll(".single-activity > .work-card")];
+  function selectActivity() {
+    const match = labCards.find(card => "#" + card.id === location.hash);
+    const active = match?.id || labCards[0].id;
+    for (const card of labCards) {
+      const visible = card.id === active;
+      if (!visible && !card.hidden) card.dispatchEvent(new Event("activity-hidden"));
+      card.hidden = !visible;
+    }
+    labPicker.value = active;
+  }
+  labPicker.addEventListener("change", () => {
+    history.replaceState(null, "", "#" + labPicker.value);
+    selectActivity();
+  });
+  window.addEventListener("hashchange", selectActivity);
+  selectActivity();
+}
+
 const launch = document.getElementById("separate");
 if (launch) {
   const diagram = document.querySelector(".separation");
@@ -213,8 +195,11 @@ if (quakePlay) {
     quakeStop.disabled = true;
     status.textContent = text;
   }
+  quakePlay.closest(".work-card").addEventListener("activity-hidden", () => {
+    sequence++;
+    finish("");
+  });
   quakeStop.addEventListener("click", () => { sequence++; finish("Playback stopped."); });
-  soundButton.addEventListener("click", () => { if (!soundEnabled && quakePlay.disabled) { sequence++; finish("Playback stopped."); } });
   quakePlay.addEventListener("click", async () => {
     const id = ++sequence;
     quakePlay.disabled = true;

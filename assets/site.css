@@ -212,3 +212,16 @@ body{isolation:isolate}body::before{content:"";position:fixed;inset:0;z-index:-1
 .mission-film details{margin-top:18px}.mission-film summary{cursor:pointer;font-weight:700}
 .team-gallery{margin:24px 0}.team-gallery figure{max-width:650px}.team-gallery h2{margin-bottom:12px}
 @media(max-width:600px){.header-inner{grid-template-columns:minmax(0,1fr) auto 44px}.header-inner .sound-toggle{grid-row:1;grid-column:2}.header-inner .theme-orb{grid-column:3}.cartoon-row{grid-template-columns:minmax(92px,37%) minmax(0,1fr);gap:12px}.cartoon-row .inline-link{font-size:.83rem}.cartoon-tile{border-radius:10px}.mission-film{border-radius:16px}}
+
+/* One activity at a time and compact cartoon controls */
+.lab-picker { display:grid; gap:7px; max-width:470px; margin-top:21px }
+.lab-picker label { font-weight:700 }
+.lab-picker select { width:100%; min-height:48px }
+.single-activity { display:block; max-width:880px; margin:auto }
+.single-activity > [hidden] { display:none }
+.single-activity .lab-photo img { max-height:230px }
+.film-controls { gap:7px }
+.film-controls .film-icon { width:45px; height:45px; padding:0; flex:0 0 45px; display:grid; place-items:center; font-size:1.32rem; font-family:system-ui,sans-serif }
+.film-controls input[type=range] { flex:1 1 100px; min-width:70px; margin:0 1px 0 8px }
+.film-clock { font-variant-numeric:tabular-nums; color:var(--muted); font-size:.77rem; white-space:nowrap }
+@media(max-width:600px){.header-inner{grid-template-columns:minmax(0,1fr) 44px}.header-inner .theme-orb{grid-column:2}.film-controls .film-icon{width:42px;height:42px;flex-basis:42px}}
