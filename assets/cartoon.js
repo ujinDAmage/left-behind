@@ -78,11 +78,17 @@ function missionArt(canvas,id,time,chapter=0) {
     line([[x+2,y+h/2],[x+w-2,y+h/2]],"#839cde",1.5);
   }
   const horizon = c.createLinearGradient(0,0,0,470);
-  horizon.addColorStop(0,"#10142f");horizon.addColorStop(1,sky);
+  horizon.addColorStop(0,"#130e39");horizon.addColorStop(.66,sky);horizon.addColorStop(1,accent);
   c.fillStyle=horizon;c.fillRect(0,0,900,480);
+  const glow = c.createRadialGradient(720,136,2,720,136,310);
+  glow.addColorStop(0,accent+"70");glow.addColorStop(.5,accent+"18");glow.addColorStop(1,accent+"00");
+  c.fillStyle=glow;c.fillRect(0,0,900,480);
   for(let i=0;i<70;i++){
     const x=(i*149.31)%900,y=(i*81.7)%330;
-    c.globalAlpha=.42+.35*Math.sin(i+time*1.5)**2;oval(x,y,i%9?1.2:2.5,i%9?1.2:2.5,"#fff3cf");
+    c.globalAlpha=.42+.4*Math.sin(i+time*1.5)**2;
+    if(i%11===0){
+      line([[x-4,y],[x+4,y],[x,y],[x,y-4],[x,y+4]],i%2?accent:"#ffeed2",1.4);
+    } else oval(x,y,i%9?1.2:2.5,i%9?1.2:2.5,"#fff3cf");
   }
   c.globalAlpha=1;
   const planetX=action==="orbit"?660-smooth*110:action==="overhead"?448:720,planetY=action==="overhead"?235:126;
@@ -100,7 +106,7 @@ function missionArt(canvas,id,time,chapter=0) {
   c.restore();
   if(!space){
     for(let i=0;i<3;i++){
-      c.fillStyle=(mars?["#78445b","#a8595c","#cd795f"]:["#464d7a","#5b658c","#8d88a9"])[i];
+      c.fillStyle=(mars?["#753456","#b04e58","#e2835e"]:["#444080","#6263a3","#9a8ac4"])[i];
       c.beginPath();c.moveTo(0,480);c.lineTo(0,286+i*35);
       for(let j=0;j<=10;j++)c.lineTo(j*90,293+i*35+Math.sin(j*1.8+i)*25+Math.cos(time*.55+j)*5);
       c.lineTo(900,480);c.closePath();c.fill();

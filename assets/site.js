@@ -59,7 +59,13 @@ for (const figure of document.querySelectorAll("[data-photo]")) {
   img.alt = photo.alt || img.alt;
   const credit = document.createElement(photo.source ? "a" : "span");
   credit.textContent = photo.credit || "";
-  if (photo.source) credit.href = photo.source;
+  if (photo.source) {
+    credit.href = photo.source;
+    if (new URL(credit.href).origin !== location.origin) {
+      credit.target = "_blank";
+      credit.rel = "noopener noreferrer";
+    }
+  }
   caption.replaceChildren(credit);
   img.loading = "eager";
   img.src = photo.file ? new URL("photos/" + encodeURIComponent(photo.file), assetBase) : photo.url;
@@ -176,91 +182,6 @@ if (launch) {
   });
 }
 
-const quakePlay = document.getElementById("play-quake");
-if (quakePlay) {
-  const quakeStop = document.getElementById("stop-quake");
-  const trace = document.querySelector(".quake-trace");
-  const status = document.getElementById("quake-result");
-  const duration = 3.1;
-  let sound, timer, context, sequence = 0;
-  function finish(text) {
-    clearTimeout(timer);
-    if (sound) {
-      try { sound.stop(); } catch {}
-      sound.disconnect();
-      sound = null;
-    }
-    trace.classList.remove("is-playing");
-    quakePlay.disabled = false;
-    quakeStop.disabled = true;
-    status.textContent = text;
-  }
-  quakePlay.closest(".work-card").addEventListener("activity-hidden", () => {
-    sequence++;
-    finish("");
-  });
-  quakeStop.addEventListener("click", () => { sequence++; finish("Playback stopped."); });
-  quakePlay.addEventListener("click", async () => {
-    const id = ++sequence;
-    quakePlay.disabled = true;
-    quakeStop.disabled = false;
-    let audible = false;
-    try {
-      context ||= new AudioContext();
-      await context.resume();
-      if (id !== sequence) return;
-      const buffer = context.createBuffer(1, Math.ceil(duration * context.sampleRate), context.sampleRate);
-      const samples = buffer.getChannelData(0);
-      for (let i = 0; i < samples.length; i++) {
-        const t = i / context.sampleRate;
-        const event = Math.max(0, t - 1.18);
-        const swell = (1 - Math.exp(-event * 11)) * Math.exp(-event * 2.2);
-        samples[i] = (Math.sin(t * 260) + .43 * Math.sin(t * 520)) * swell * .18 + (Math.random() - .5) * .013;
-      }
-      sound = context.createBufferSource();
-      sound.buffer = buffer;
-      sound.connect(context.destination);
-      sound.start();
-      audible = true;
-    } catch {
-      // The visual trace remains available when audio playback is blocked.
-    }
-    if (id !== sequence) return;
-    trace.classList.add("is-playing");
-    status.textContent = audible ? "Playing a simulated marsquake. Listen for the stronger shaking." : "Showing the trace. Audio is unavailable.";
-    timer = setTimeout(() => finish("The strongest shaking arrives after the quiet baseline."), duration * 1000);
-  });
-  window.addEventListener("pagehide", () => { sequence++; finish(""); });
-}
-
-const golf = document.getElementById("golf-angle");
-if (golf) {
-  golf.addEventListener("input", () => { document.getElementById("golf-angle-value").value = golf.value + "°"; });
-  document.getElementById("golf-hit").addEventListener("click", () => {
-    const angle = Number(golf.value) * Math.PI / 180;
-    const distance = (8 ** 2) * Math.sin(2 * angle) / 1.62;
-    const ball = document.querySelector(".golf-track i");
-    ball.getAnimations?.().forEach(animation => animation.cancel());
-    const finish = 5 + distance / 40 * 84;
-    if (!reducedMotion.matches && ball.animate) {
-      ball.animate([{left:"5%",bottom:"6px"},{left:(5 + finish) / 2 + "%",bottom:(17 + Math.sin(angle) * 60) + "px"},{left:finish + "%",bottom:"6px"}],{duration:700,fill:"forwards"});
-    } else {
-      ball.style.left = finish + "%";
-    }
-    document.getElementById("golf-result").textContent = "Simulated range: " + distance.toFixed(1) + " m. Try a different angle.";
-  });
-}
-const scan = document.getElementById("viking-scan");
-if (scan) {
-  let strips = 0;
-  function renderScan() {
-    document.querySelector(".scan-image").style.setProperty("--unseen", (6 - strips) / 6 * 100 + "%");
-    document.getElementById("viking-result").textContent = strips + " of 6 strips";
-    scan.disabled = strips === 6;
-  }
-  scan.addEventListener("click", () => { strips++; renderScan(); });
-  document.getElementById("viking-reset").addEventListener("click", () => { strips = 0; renderScan(); });
-}
 const booth = document.querySelector("[data-booth]");
 if (booth) {
   const get = id => document.getElementById(id);
